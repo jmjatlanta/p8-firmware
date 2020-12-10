@@ -27,3 +27,6 @@ Taken from the [colmi.com](https://www.colmi.com/products/p8-smartwatch) website
 | Watch body material | alloy, about 45g, 43mm long by 37mm wide by 10mm thick |
 | Operating temperature | -10℃～50℃ |
 | Package contents | 1 x COLMI P8 smart watch<br>1 x Charging cable<br>1 x User manual |
+
+
+[Nordic nRF52832 specs](https://infocenter.nordicsemi.com/index.jsp?topic=%2Fstruct_nrf52%2Fstruct%2Fnrf52832_ps.html)

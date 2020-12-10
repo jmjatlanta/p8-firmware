@@ -10,24 +10,24 @@ long lastScreenUpdate = 0;
   There will be a pointer to the current screen which will have the methods called on it
   Finally a screen will be switched by moving the pointer to a different instance of a different screen
 */
-TimeScreen timeScreen;
-StopWatchScreen stopWatchScreen;
-TimeDateSetScreen timeDateSetScreen;
+TimeApp timeScreen;
+StopwatchApp stopWatchScreen;
+SettingsApp timeDateSetScreen;
 DemoScreen demoScreen;
-InfoScreen infoScreen;
-PowerScreen powerScreen;
+InfoApp infoScreen;
+PowerApp powerScreen;
 
 int currentHomeScreenIndex = 0;
-WatchScreenBase* homeScreens[NUM_SCREENS] = {&timeScreen, &stopWatchScreen, &timeDateSetScreen, &infoScreen, &powerScreen, &demoScreen};
+WatchAppBase* homeScreens[NUM_SCREENS] = {&timeScreen, &stopWatchScreen, &timeDateSetScreen, &infoScreen, &powerScreen, &demoScreen};
 
-WatchScreenBase* currentScreen = homeScreens[currentHomeScreenIndex];
+WatchAppBase* currentScreen = homeScreens[currentHomeScreenIndex];
 
 /*
   This is called whenever a new screen is loaded
   It will setup the screen and draw the indicator and update the screen refresh time
 */
 void initScreen() {
-  currentScreen->screenSetup();                             //Call screenSetup() on the current screen
+  currentScreen->onInit();                             //Call screenSetup() on the current screen
   drawAppIndicator();                                       //Draw the app bar
   screenUpdateMS = currentScreen->getScreenUpdateTimeMS();  //Set the current screen update time
 }
@@ -37,11 +37,8 @@ void initScreen() {
   else call that handler 
 */
 void handleLeftSwipe() {
-  if (currentScreen->doesImplementSwipeRight() == false) {
+  if (currentScreen->onSwipeLeft() == false)
     nextScreen();
-  } else {
-    currentScreen->swipeRight();
-  }
 }
 
 /* 
@@ -49,11 +46,8 @@ void handleLeftSwipe() {
   else call that handler
  */
 void handleRightSwipe() {
-  if (currentScreen->doesImplementSwipeLeft() == false) {
+  if (currentScreen->onSwipeRight() == false)
     prevScreen();
-  } else {
-    currentScreen->swipeLeft();
-  }
 }
 
 /* 
@@ -61,7 +55,7 @@ void handleRightSwipe() {
  */
 void prevScreen() {
   if (currentHomeScreenIndex != 0) {
-    currentScreen->screenDestroy();  //Call 'destructor' for current screen
+    currentScreen->onHide();  //Call 'destructor' for current screen
     currentHomeScreenIndex--;
     currentScreen = homeScreens[currentHomeScreenIndex];
     initScreen();
@@ -73,7 +67,7 @@ void prevScreen() {
  */
 void nextScreen() {
   if (currentHomeScreenIndex != NUM_SCREENS - 1) {
-    currentScreen->screenDestroy();  //Call 'destructor' for current screen
+    currentScreen->onHide();  //Call 'destructor' for current screen
     currentHomeScreenIndex++;
     currentScreen = homeScreens[currentHomeScreenIndex];
     initScreen();
@@ -84,14 +78,14 @@ void nextScreen() {
   Since the main UI doesn't need a swipe up or down event (yet), just call the handler of the current screen
 */
 void handleUpSwipe() {
-  currentScreen->swipeUp();
+  currentScreen->onSwipeUp();
 }
 
 /* 
   Ditto as above 
 */
 void handleDownSwipe() {
-  currentScreen->swipeDown();
+  currentScreen->onSwipeDown();
 }
 
 /* 
@@ -112,7 +106,7 @@ void handleButtonPress() {
 */
 void handleTap(uint8_t x, uint8_t y) {
   if (y < 212) {  //If the tap is on the main application
-    currentScreen->screenTap(x, y);
+    currentScreen->onTap(x, y);
   } else {  //Else we are pressing in the app drawer buttons, so go to the prev or next screen
     if (x < 100) {
       prevScreen();
@@ -126,9 +120,7 @@ void handleTap(uint8_t x, uint8_t y) {
   Sleep when we receive a long tap 
 */
 void handleLongTap(uint8_t x, uint8_t y) {
-  if (currentScreen->doesImplementLongTap() == true) {  //Make sure the current screen doesn't implement the long tap
-    currentScreen->screenLongTap(x, y);
-  } else {
+  if (currentScreen->onLongTap(x, y) == false) {  //Make sure the current screen doesn't implement the long tap
     enterSleep();
   }
 }
@@ -141,7 +133,7 @@ void handleLongTap(uint8_t x, uint8_t y) {
 void screenControllerLoop() {
   if (millis() - lastScreenUpdate > screenUpdateMS) {
     //The refresh time is variable depending on the current screen
-    currentScreen->screenLoop();
+    currentScreen->onUpdate();
     lastScreenUpdate = millis();
   }
 }
